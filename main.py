@@ -62,14 +62,14 @@ def route_search(start_lat: float, start_lon: float, end_lat: float, end_lon: fl
     return response.json()
 
 
-# class User(BaseModel):
-#     phone: str
-#     name: str
-#
-#
-# @app.post("/auth")
-# def auth(user: User):
-#     return issue_token(user.dict())
+class User(BaseModel):
+    phone: str
+    name: str
+
+
+@app.post("/auth")
+def auth(user: User):
+    return issue_token(user.dict())
 #
 #
 #
