@@ -1,7 +1,9 @@
 import requests
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
+from pydantic import BaseModel
 from sqlmodel import create_engine
 
+from dependencies import get_token_data, issue_token
 from schema import *
 
 app = FastAPI()
@@ -14,6 +16,7 @@ API_KEY = "fbvcs7KASx8FIk74NL6pSUI7M9VbxXz7HOIaDpL4"
 
 @app.on_event("startup")
 def on_startup():
+    global engine
     engine = create_engine(DATABASE_URL, echo=True)
     SQLModel.metadata.create_all(engine)
 
@@ -59,16 +62,18 @@ def route_search(start_lat: float, start_lon: float, end_lat: float, end_lon: fl
     return response.json()
 
 
-@app.post("/dropzone")
-def create_dropzone():
-    pass
-
-
-@app.post("/reserve_drt")
-def reserve_drt():
-    pass
-
-
-@app.post("/cancel_drt")
-def cancel_drt():
-    pass
+# class User(BaseModel):
+#     phone: str
+#     name: str
+#
+#
+# @app.post("/auth")
+# def auth(user: User):
+#     return issue_token(user.dict())
+#
+#
+#
+#
+# @app.post("/reserve_drt")
+# def reserve_drt(data: dict = Depends(get_token_data)):
+#     return data
