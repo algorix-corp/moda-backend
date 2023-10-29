@@ -10,7 +10,7 @@ load_dotenv()
 
 @app.get("/", name="Hello, World!")
 def hello_world():
-    return {"message": f"Hello, World! From {os.getenv('SERVICE_NAME')}"}
+    return {"message": f"Hello, World! From {os.getenv('ENDPOINT_URL')}"}
 
 
 class Phone(BaseModel):
