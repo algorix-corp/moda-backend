@@ -1,6 +1,7 @@
 import boto3
 from dotenv import load_dotenv
 import os
+import random
 
 load_dotenv()
 
@@ -27,6 +28,5 @@ def send_sms(phone, text):
     print(f"Sent SMS to {phone} with text: {text}")
 
 
-if __name__ == "__main__":
-    # send_sms("01053595167", "The Code is 1234")
-    pass
+def make_auth_code():
+    return "".join([str(random.randint(0, 9)) for _ in range(6)])

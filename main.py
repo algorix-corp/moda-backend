@@ -3,9 +3,59 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 import os
 import functions
+import redis
+import psycopg2
+from sqlmodel import SQLModel, create_engine, Session
+import schemas
 
 app = FastAPI()
+engine = None
 load_dotenv()
+
+redis_client = redis.Redis(
+    host=os.getenv("REDIS_HOST"),
+    port=os.getenv("REDIS_PORT"),
+    password=os.getenv("REDIS_PASSWORD"),
+    decode_responses=True
+)
+
+postgres_client = psycopg2.connect(
+    host=os.getenv("POSTGRES_HOST"),
+    port=os.getenv("POSTGRES_PORT"),
+    user=os.getenv("POSTGRES_USER"),
+    password=os.getenv("POSTGRES_PASSWORD"),
+    database=os.getenv("POSTGRES_DATABASE"),
+)
+
+
+@app.on_event("startup")
+def startup():
+    print("===== Startup =====")
+    print(f"REDIS: {redis_client.info('server')['redis_version']}")
+    cur = postgres_client.cursor()
+    cur.execute("SELECT version();")
+    print(f"POSTGRES: {cur.fetchone()[0]}")
+    cur.close()
+
+    POSTGRES_DATABASE_URL = (
+        f"postgresql://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}@"
+        f"{os.getenv('POSTGRES_HOST')}:{os.getenv('POSTGRES_PORT')}/"
+        f"{os.getenv('POSTGRES_DB')}")
+
+    engine = create_engine(POSTGRES_DATABASE_URL, echo=True)
+    SQLModel.metadata.create_all(engine)
+    print("SQLModel metadata created")
+
+    print("===================")
+
+
+@app.on_event("shutdown")
+def shutdown():
+    print("===== Shutdown =====")
+    print("Bye!")
+    redis_client.close()
+    postgres_client.close()
+    print("====================")
 
 
 @app.get("/", name="Hello, World!")
@@ -17,7 +67,46 @@ class Phone(BaseModel):
     phone_number: str
 
 
-@app.post("/auth/send_auth_code")
+@app.post("/auth/send_auth_code", tags=["auth"])
 def phone_(phone: Phone):
     phone_number = "".join([c for c in phone.phone_number if c.isnumeric()])
-    functions.send_sms(phone_number, "The Code is 1234")
+    auth_code = functions.make_auth_code()
+    redis_client.set(f"auth_code:{phone_number}", auth_code, ex=300)
+    functions.send_sms(phone_number, f"The MODA Authentication Code is {auth_code}")
+    return {"message": "Sent auth code"}
+
+
+class VerifyPhone(BaseModel):
+    phone_number: str
+    auth_code: str
+
+
+@app.post("/auth/verify_phone", tags=["auth"])
+def verify_phone(verify_phone: VerifyPhone):
+    phone_number = "".join([c for c in verify_phone.phone_number if c.isnumeric()])
+    auth_code = verify_phone.auth_code
+    if redis_client.get(f"auth_code:{phone_number}") == auth_code:
+        return {"message": "Success"}
+    else:
+        return {"message": "Fail"}
+
+
+class CreateUser(BaseModel):
+    phone_number: str
+    username: str
+    card_number: str
+
+
+@app.post("/user/create_user", tags=["user"])
+def create_user(create_user: CreateUser):
+    phone_number = "".join([c for c in create_user.phone_number if c.isnumeric()])
+    username = create_user.username
+    card_number = create_user.card_number
+
+    with Session(engine) as session:
+        user = schemas.User(phone_number=phone_number, username=username, card_number=card_number)
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+
+    return {"message": "Success", "user": user}
