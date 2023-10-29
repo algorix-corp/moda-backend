@@ -9,7 +9,6 @@ from sqlmodel import SQLModel, create_engine, Session
 import schemas
 
 app = FastAPI()
-engine = None
 load_dotenv()
 
 redis_client = redis.Redis(
@@ -19,29 +18,18 @@ redis_client = redis.Redis(
     decode_responses=True
 )
 
-postgres_client = psycopg2.connect(
-    host=os.getenv("POSTGRES_HOST"),
-    port=os.getenv("POSTGRES_PORT"),
-    user=os.getenv("POSTGRES_USER"),
-    password=os.getenv("POSTGRES_PASSWORD"),
-    database=os.getenv("POSTGRES_DATABASE"),
-)
-
 
 @app.on_event("startup")
 def startup():
     print("===== Startup =====")
     print(f"REDIS: {redis_client.info('server')['redis_version']}")
-    cur = postgres_client.cursor()
-    cur.execute("SELECT version();")
-    print(f"POSTGRES: {cur.fetchone()[0]}")
-    cur.close()
 
     POSTGRES_DATABASE_URL = (
         f"postgresql://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}@"
         f"{os.getenv('POSTGRES_HOST')}:{os.getenv('POSTGRES_PORT')}/"
         f"{os.getenv('POSTGRES_DB')}")
 
+    global engine
     engine = create_engine(POSTGRES_DATABASE_URL, echo=True)
     SQLModel.metadata.create_all(engine)
     print("SQLModel metadata created")
@@ -54,7 +42,6 @@ def shutdown():
     print("===== Shutdown =====")
     print("Bye!")
     redis_client.close()
-    postgres_client.close()
     print("====================")
 
 
@@ -110,3 +97,14 @@ def create_user(create_user: CreateUser):
         session.refresh(user)
 
     return {"message": "Success", "user": user}
+
+
+@app.post("/user/get_user", tags=["user"])
+def get_user(phone: Phone):
+    phone_number = "".join([c for c in phone.phone_number if c.isnumeric()])
+    with Session(engine) as session:
+        user = session.query(schemas.User).filter(schemas.User.phone_number == phone_number).first()
+        if user is None:
+            return {"message": "Fail", "user": None}
+        else:
+            return {"message": "Success", "user": user}
