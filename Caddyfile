@@ -1,0 +1,3 @@
+api.ride.moda {
+    reverse_proxy localhost:8000
+}
