@@ -8,7 +8,7 @@ from uuid import UUID
 from sqlmodel import SQLModel, create_engine, Session
 import schemas
 
-app = FastAPI()
+app = FastAPI(title="MODA API")
 load_dotenv()
 
 redis_client = redis.Redis(
