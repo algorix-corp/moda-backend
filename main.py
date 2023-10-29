@@ -117,7 +117,7 @@ class UserUpdate(BaseModel):
     card_number: str
 
 
-@app.put("/user/update_user?user_id", tags=["user"])
+@app.put("/user/update_user", tags=["user"])
 def update_user(user: UserUpdate):
     user_id = user.user_id
     phone_number = "".join([c for c in user.phone_number if c.isnumeric()])
