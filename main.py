@@ -117,7 +117,7 @@ class UserUpdate(BaseModel):
     card_number: str
 
 
-@app.post("/user/update_user?user_id", tags=["user"])
+@app.put("/user/update_user?user_id", tags=["user"])
 def update_user(user: UserUpdate):
     user_id = user.user_id
     phone_number = "".join([c for c in user.phone_number if c.isnumeric()])
@@ -137,7 +137,7 @@ def update_user(user: UserUpdate):
             return {"message": "Success", "user": user}
 
 
-@app.post("/user/delete_user?user_id", tags=["user"])
+@app.delete("/user/delete_user?user_id", tags=["user"])
 def delete_user(user_id: UUID):
     with Session(engine) as session:
         user = session.query(schemas.User).filter(schemas.User.id == user_id).first()
