@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import os
 import functions
 import redis
-import psycopg2
+from uuid import UUID
 from sqlmodel import SQLModel, create_engine, Session
 import schemas
 
@@ -108,3 +108,42 @@ def get_user(phone: Phone):
             return {"message": "Fail", "user": None}
         else:
             return {"message": "Success", "user": user}
+
+
+class UserUpdate(BaseModel):
+    user_id: UUID
+    phone_number: str
+    username: str
+    card_number: str
+
+
+@app.post("/user/update_user?user_id", tags=["user"])
+def update_user(user: UserUpdate):
+    user_id = user.user_id
+    phone_number = "".join([c for c in user.phone_number if c.isnumeric()])
+    username = user.username
+    card_number = user.card_number
+
+    with Session(engine) as session:
+        user = session.query(schemas.User).filter(schemas.User.id == user_id).first()
+        if user is None:
+            return {"message": "Fail", "user": None}
+        else:
+            user.phone_number = phone_number
+            user.username = username
+            user.card_number = card_number
+            session.commit()
+            session.refresh(user)
+            return {"message": "Success", "user": user}
+
+
+@app.post("/user/delete_user?user_id", tags=["user"])
+def delete_user(user_id: UUID):
+    with Session(engine) as session:
+        user = session.query(schemas.User).filter(schemas.User.id == user_id).first()
+        if user is None:
+            return {"message": "Fail", "user": None}
+        else:
+            session.delete(user)
+            session.commit()
+            return {"message": "Success"}
