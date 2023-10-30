@@ -6,7 +6,8 @@ import random
 import jwt
 from fastapi import HTTPException
 from pydantic import BaseModel
-from sqlmodel import Session
+from sqlmodel import Session, select
+from uuid import UUID
 
 import schemas
 
@@ -14,13 +15,13 @@ load_dotenv()
 
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-JWT_SECRET = 'askdflsadjflksdajflksdj'
-TRANSIT_API_URL = "https://apis.openapi.sk.com/transit/routes"
-POI_API_URL = "https://apis.openapi.sk.com/tmap/pois"
-API_KEY = "fbvcs7KASx8FIk74NL6pSUI7M9VbxXz7HOIaDpL4"
+JWT_SECRET = os.getenv("JWT_SECRET")
+API_KEY = os.getenv("API_KEY")
+# API_KEY = "fbvcs7KASx8FIk74NL6pSUI7M9VbxXz7HOIaDpL4"
 
 
 class UserJWT(BaseModel):
+    id: UUID
     phone_number: str
     username: str
     card_number: str
@@ -37,7 +38,8 @@ def decode_jwt(token: str, engine) -> UserJWT:
         print(e)
         raise HTTPException(status_code=401, detail="인증하는데 문제가 발생했어요..")
     with Session(engine) as session:
-        user = session.query(schemas.User).filter(schemas.User.phone_number == data.phone_number).first()
+        query = select(schemas.User).where(schemas.User.phone_number == data.phone_number)
+        user = session.exec(query).first()
         if user is None:
             raise HTTPException(status_code=400, detail="인증하는데 문제가 발생했어요.")
     return data
@@ -72,15 +74,15 @@ def poi_search(search_query: str):
         "searchKeyword": search_query,
     }
 
-    urlparam = "&".join([f"{k}={v}" for k, v in query.items()])
-    poi_api_url = f"{POI_API_URL}?{urlparam}"
+    # urlparam = "&".join([f"{k}={v}" for k, v in query.items()])
+    # poi_api_url = f"https://apis.openapi.sk.com/tmap/pois?{urlparam}"
 
     headers = {
         "appKey": API_KEY,
         "Accept": "application/json"
     }
 
-    response = requests.get(poi_api_url, headers=headers)
+    response = requests.get("https://apis.openapi.sk.com/tmap/pois", headers=headers, params=query)
     return response.json()
 
 
@@ -101,5 +103,20 @@ def route_search(start_lat: float, start_lon: float, end_lat: float, end_lon: fl
         "content-type": "application/json"
     }
 
-    response = requests.post(TRANSIT_API_URL, headers=headers, json=body)
+    response = requests.post("https://apis.openapi.sk.com/transit/routes", headers=headers, json=body)
+    return response.json()
+
+
+def get_location(poi_id: int):
+    #  	https://apis.openapi.sk.com/tmap/pois/{poiInfo}?version={version}&resCoordType={resCoordType}&callback={callback}&appKey={appKey}
+    query = {
+        "version": "1",
+        "resCoordType": "WGS84GEO",
+    }
+    headers = {
+        "accept": "application/json",
+        "appKey": API_KEY,
+    }
+
+    response = requests.get(f"https://apis.openapi.sk.com/tmap/pois/{poi_id}", headers=headers, params=query)
     return response.json()

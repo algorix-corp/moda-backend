@@ -31,7 +31,6 @@ class DRTReservation(SQLModel, table=True):
     start_poi: int
     end_poi: int
     bus_id: UUID
-    route: str  # uuid
     estimated_time: str
     saved_time: str
     estimate_fee: int
