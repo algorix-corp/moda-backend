@@ -27,9 +27,9 @@ app.add_middleware(
 
 @app.on_event("startup")
 def on_startup():
-    global redis_client
     schemas.get_engine()
 
+    global redis_client
     redis_client = redis.Redis(
         host=getenv("REDIS_HOST"),
         port=getenv("REDIS_PORT"),
