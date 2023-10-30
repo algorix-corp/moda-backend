@@ -5,9 +5,11 @@ import os
 import random
 import jwt
 from fastapi import HTTPException
+from fastapi.security import HTTPBearer
 from pydantic import BaseModel
 from sqlmodel import Session, select
 from uuid import UUID
+from main import engine
 
 import schemas
 
@@ -31,7 +33,7 @@ def generate_jwt(payload: UserJWT):
     return jwt.encode(payload, JWT_SECRET, algorithm="HS256")
 
 
-def decode_jwt(token: str, engine) -> UserJWT:
+def decode_jwt(token: str = HTTPBearer()) -> UserJWT:
     try:
         data = UserJWT(**jwt.decode(token, JWT_SECRET, algorithms=["HS256"]))
     except Exception as e:
