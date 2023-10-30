@@ -1,21 +1,23 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import os
 import functions
 import redis
 from uuid import UUID
-from sqlmodel import SQLModel, create_engine, Session, select
+from sqlmodel import Session, select
 import schemas
 from functions import UserJWT, decode_jwt
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Annotated
+from functions import engine
 
 origin = [
     "http://localhost:5173",
     "https://dev.ride.moda",
     "https://ride.moda"
 ]
+
 
 app = FastAPI(title="MODA API")
 load_dotenv()
@@ -41,15 +43,7 @@ def startup():
     print("===== Startup =====")
     print(f"REDIS: {redis_client.info('server')['redis_version']}")
 
-    POSTGRES_DATABASE_URL = (
-        f"postgresql://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}@"
-        f"{os.getenv('POSTGRES_HOST')}:{os.getenv('POSTGRES_PORT')}/"
-        f"{os.getenv('POSTGRES_DB')}")
-
-    global engine
-    engine = create_engine(POSTGRES_DATABASE_URL, echo=True)
-    SQLModel.metadata.create_all(engine)
-    print("SQLModel metadata created")
+    functions.new_engine()
 
     print("===================")
 
@@ -146,7 +140,7 @@ def create_user(create_data: CreateUser):
 
 
 @app.post("/user/get_user", tags=["user"])
-def get_user(token: Annotated[UserJWT, decode_jwt]):
+def get_user(token: Annotated[UserJWT, Depends(decode_jwt)]):
     with Session(engine) as session:
         query = select(schemas.User).where(schemas.User.id == token.id)
         user = session.exec(query).first()
@@ -162,7 +156,7 @@ class UserUpdate(BaseModel):
 
 
 @app.put("/user/update_user", tags=["user"])
-def update_user(user: UserUpdate, token: Annotated[UserJWT, decode_jwt]):
+def update_user(user: UserUpdate, token: Annotated[UserJWT, Depends(decode_jwt)]):
     username = user.username
     card_number = user.card_number
 
@@ -189,7 +183,7 @@ class PhoneUpdate(BaseModel):
 
 
 @app.put("/user/update_phone", tags=["user"])
-def update_phone(phone: PhoneUpdate, token: Annotated[UserJWT, decode_jwt]):
+def update_phone(phone: PhoneUpdate, token: Annotated[UserJWT, Depends(decode_jwt)]):
     phone_number = "".join([c for c in phone.phone_number if c.isnumeric()])
     auth_code = phone.auth_code
 
@@ -218,7 +212,7 @@ def update_phone(phone: PhoneUpdate, token: Annotated[UserJWT, decode_jwt]):
 
 
 @app.delete("/user/delete_user", tags=["user"])
-def delete_user(token: Annotated[UserJWT, decode_jwt]):
+def delete_user(token: Annotated[UserJWT, Depends(decode_jwt)]):
     with Session(engine) as session:
         query = select(schemas.User).where(schemas.User.id == token.id)
         user = session.exec(query).first()
@@ -253,7 +247,7 @@ class AddBookmark(BaseModel):
 
 
 @app.post("/bookmark/add_bookmark", tags=["bookmark"])
-def add_bookmark(data: AddBookmark, token: Annotated[UserJWT, decode_jwt]):
+def add_bookmark(data: AddBookmark, token: Annotated[UserJWT, Depends(decode_jwt)]):
     location_name = data.location_name
     location_poi = data.location_poi
     with Session(engine) as session:
@@ -265,7 +259,7 @@ def add_bookmark(data: AddBookmark, token: Annotated[UserJWT, decode_jwt]):
 
 
 @app.get("/bookmark/get_bookmark", tags=["bookmark"])
-def get_bookmark(token: Annotated[UserJWT, decode_jwt]):
+def get_bookmark(token: Annotated[UserJWT, Depends(decode_jwt)]):
     with Session(engine) as session:
         query = select(schemas.LocationBookmark).where(schemas.LocationBookmark.user_id == token.id)
         bookmarks = session.exec(query).all()
@@ -277,7 +271,7 @@ class DeleteBookmark(BaseModel):
 
 
 @app.delete("/bookmark/delete_bookmark", tags=["bookmark"])
-def delete_bookmark(data: DeleteBookmark, token: Annotated[UserJWT, decode_jwt]):
+def delete_bookmark(data: DeleteBookmark, token: Annotated[UserJWT, Depends(decode_jwt)]):
     bookmark_id = data.bookmark_id
     with Session(engine) as session:
         bookmark = session.query(schemas.LocationBookmark).filter(schemas.LocationBookmark.id == bookmark_id).first()
@@ -309,7 +303,7 @@ class ReservationData(BaseModel):
 
 
 @app.post("/reservation", tags=["drt"])
-def make_reservation(data: ReservationData, token: Annotated[UserJWT, decode_jwt]):
+def make_reservation(data: ReservationData, token: Annotated[UserJWT, Depends(decode_jwt)]):
     date = data.date
     time = data.time
     start_poi = data.start_poi
@@ -331,7 +325,7 @@ def make_reservation(data: ReservationData, token: Annotated[UserJWT, decode_jwt
 
 
 @app.get("/reservations", tags=["drt"])
-def get_reservations(token: Annotated[UserJWT, decode_jwt]):
+def get_reservations(token: Annotated[UserJWT, Depends(decode_jwt)]):
     with Session(engine) as session:
         query = select(schemas.DRTReservation).where(schemas.DRTReservation.user_id == token.id)
         reservations = session.exec(query).all()
@@ -339,7 +333,7 @@ def get_reservations(token: Annotated[UserJWT, decode_jwt]):
 
 
 @app.get("/reservation/{reservation_id}", tags=["drt"])
-def get_reservation_id(reservation_id: UUID, token: Annotated[UserJWT, decode_jwt]):
+def get_reservation_id(reservation_id: UUID, token: Annotated[UserJWT, Depends(decode_jwt)]):
     with Session(engine) as session:
         query = select(schemas.DRTReservation).where(schemas.DRTReservation.id == reservation_id)
         reservation = session.exec(query).first()
@@ -352,7 +346,7 @@ def get_reservation_id(reservation_id: UUID, token: Annotated[UserJWT, decode_jw
 
 
 @app.delete("/reservation/{reservation_id}", tags=["drt"])
-def delete_reservation_id(reservation_id: UUID, token: Annotated[UserJWT, decode_jwt]):
+def delete_reservation_id(reservation_id: UUID, token: Annotated[UserJWT, Depends(decode_jwt)]):
     with Session(engine) as session:
         query = select(schemas.DRTReservation).where(schemas.DRTReservation.id == reservation_id)
         reservation = session.exec(query).first()

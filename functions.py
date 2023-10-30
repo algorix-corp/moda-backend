@@ -1,17 +1,22 @@
+from typing import Annotated
+
 import boto3
 import requests
 from dotenv import load_dotenv
 import os
 import random
 import jwt
-from fastapi import HTTPException
+from fastapi import HTTPException, security, Depends
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
-from sqlmodel import Session, select
+from sqlmodel import Session, select, SQLModel, create_engine
 from uuid import UUID
 
 import schemas
 
 load_dotenv()
+
+engine = None
 
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
@@ -29,16 +34,28 @@ class UserJWT(BaseModel):
     card_number: str
 
 
+def new_engine():
+    POSTGRES_DATABASE_URL = (
+        f"postgresql://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}@"
+        f"{os.getenv('POSTGRES_HOST')}:{os.getenv('POSTGRES_PORT')}/"
+        f"{os.getenv('POSTGRES_DB')}")
+
+    global engine
+    engine = create_engine(POSTGRES_DATABASE_URL, echo=True)
+    SQLModel.metadata.create_all(engine)
+    print("SQLModel metadata created")
+
+
 def generate_jwt(payload: UserJWT):
     return jwt.encode(payload, JWT_SECRET, algorithm="HS256")
 
 
-def decode_jwt(token: str, engine) -> UserJWT:
+def decode_jwt(token: Annotated[HTTPAuthorizationCredentials, Depends(HTTPBearer())]) -> UserJWT:
     try:
         data = UserJWT(**jwt.decode(token, JWT_SECRET, algorithms=["HS256"]))
     except Exception as e:
         print(e)
-        raise HTTPException(status_code=401, detail="인증하는데 문제가 발생했어요..")
+        raise HTTPException(status_code=401, detail="인증하는데 문제가 발생했어요.")
     with Session(engine) as session:
         query = select(schemas.User).where(schemas.User.phone_number == data.phone_number)
         user = session.exec(query).first()
