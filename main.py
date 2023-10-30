@@ -219,3 +219,10 @@ def delete_user(token: Annotated[UserJWT, decode_jwt]):
             session.delete(user)
             session.commit()
             return {"message": "계정 삭제를 완료했어요."}
+
+
+@app.get("/poi_search", tags=["poi"])
+def poi_search(search_keyword: str):
+    return functions.poi_search(search_keyword)
+
+

@@ -1,4 +1,5 @@
 import boto3
+import requests
 from dotenv import load_dotenv
 import os
 import random
@@ -13,7 +14,10 @@ load_dotenv()
 
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-JWT_SECRET = os.getenv("JWT_SECRET")
+JWT_SECRET = 'askdflsadjflksdajflksdj'
+TRANSIT_API_URL = "https://apis.openapi.sk.com/transit/routes"
+POI_API_URL = "https://apis.openapi.sk.com/tmap/pois"
+API_KEY = "fbvcs7KASx8FIk74NL6pSUI7M9VbxXz7HOIaDpL4"
 
 
 class UserJWT(BaseModel):
@@ -60,3 +64,21 @@ def send_sms(phone, text):
 
 def make_auth_code():
     return "".join([str(random.randint(0, 9)) for _ in range(6)])
+
+
+def poi_search(search_query: str):
+    query = {
+        "version": "1",
+        "searchKeyword": search_query,
+    }
+
+    urlparam = "&".join([f"{k}={v}" for k, v in query.items()])
+    poi_api_url = f"{POI_API_URL}?{urlparam}"
+
+    headers = {
+        "appKey": API_KEY,
+        "Accept": "application/json"
+    }
+
+    response = requests.get(poi_api_url, headers=headers)
+    return response.json()
