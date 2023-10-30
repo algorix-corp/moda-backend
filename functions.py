@@ -82,3 +82,24 @@ def poi_search(search_query: str):
 
     response = requests.get(poi_api_url, headers=headers)
     return response.json()
+
+
+def route_search(start_lat: float, start_lon: float, end_lat: float, end_lon: float):
+    body = {
+        "startX": start_lon,
+        "startY": start_lat,
+        "endX": end_lon,
+        "endY": end_lat,
+        "count": 1,
+        "lang": 0,
+        "format": "json"
+    }
+
+    headers = {
+        "accept": "application/json",
+        "appKey": API_KEY,
+        "content-type": "application/json"
+    }
+
+    response = requests.post(TRANSIT_API_URL, headers=headers, json=body)
+    return response.json()

@@ -226,3 +226,13 @@ def poi_search(search_keyword: str):
     return functions.poi_search(search_keyword)
 
 
+class RouteSearch(BaseModel):
+    start_lat: float
+    start_lon: float
+    end_lat: float
+    end_lon: float
+
+
+@app.post("/route_search", tags=["route"])
+def route_search(data: RouteSearch):
+    return functions.route_search(data.start_lat, data.start_lon, data.end_lat, data.end_lon)
