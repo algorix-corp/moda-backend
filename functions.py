@@ -7,13 +7,14 @@ import jwt
 from fastapi import HTTPException
 from fastapi.security import HTTPBearer
 from pydantic import BaseModel
-from sqlmodel import Session, select
+from sqlmodel import Session, select, SQLModel, create_engine
 from uuid import UUID
-from main import engine
 
 import schemas
 
 load_dotenv()
+
+engine = None
 
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
@@ -27,6 +28,18 @@ class UserJWT(BaseModel):
     phone_number: str
     username: str
     card_number: str
+
+
+def new_engine():
+    POSTGRES_DATABASE_URL = (
+        f"postgresql://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}@"
+        f"{os.getenv('POSTGRES_HOST')}:{os.getenv('POSTGRES_PORT')}/"
+        f"{os.getenv('POSTGRES_DB')}")
+
+    global engine
+    engine = create_engine(POSTGRES_DATABASE_URL, echo=True)
+    SQLModel.metadata.create_all(engine)
+    print("SQLModel metadata created")
 
 
 def generate_jwt(payload: UserJWT):

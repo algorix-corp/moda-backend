@@ -5,11 +5,12 @@ import os
 import functions
 import redis
 from uuid import UUID
-from sqlmodel import SQLModel, create_engine, Session, select
+from sqlmodel import Session, select
 import schemas
 from functions import UserJWT, decode_jwt
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Annotated
+from functions import engine
 
 origin = [
     "http://localhost:5173",
@@ -17,7 +18,6 @@ origin = [
     "https://ride.moda"
 ]
 
-engine = None
 
 app = FastAPI(title="MODA API")
 load_dotenv()
@@ -43,15 +43,7 @@ def startup():
     print("===== Startup =====")
     print(f"REDIS: {redis_client.info('server')['redis_version']}")
 
-    POSTGRES_DATABASE_URL = (
-        f"postgresql://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}@"
-        f"{os.getenv('POSTGRES_HOST')}:{os.getenv('POSTGRES_PORT')}/"
-        f"{os.getenv('POSTGRES_DB')}")
-
-    global engine
-    engine = create_engine(POSTGRES_DATABASE_URL, echo=True)
-    SQLModel.metadata.create_all(engine)
-    print("SQLModel metadata created")
+    functions.new_engine()
 
     print("===================")
 
