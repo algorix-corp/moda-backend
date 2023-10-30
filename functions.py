@@ -17,6 +17,8 @@ AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 JWT_SECRET = os.getenv("JWT_SECRET")
 API_KEY = os.getenv("API_KEY")
+
+
 # API_KEY = "fbvcs7KASx8FIk74NL6pSUI7M9VbxXz7HOIaDpL4"
 
 
@@ -108,7 +110,7 @@ def route_search(start_lat: float, start_lon: float, end_lat: float, end_lon: fl
 
 
 def get_location(poi_id: int):
-    #  	https://apis.openapi.sk.com/tmap/pois/{poiInfo}?version={version}&resCoordType={resCoordType}&callback={callback}&appKey={appKey}
+    # https://apis.openapi.sk.com/tmap/pois/{poiInfo}?version={version}&resCoordType={resCoordType}&callback={callback}&appKey={appKey}
     query = {
         "version": "1",
         "resCoordType": "WGS84GEO",
