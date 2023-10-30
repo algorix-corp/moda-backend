@@ -1,11 +1,13 @@
+from typing import Annotated
+
 import boto3
 import requests
 from dotenv import load_dotenv
 import os
 import random
 import jwt
-from fastapi import HTTPException
-from fastapi.security import HTTPBearer
+from fastapi import HTTPException, security, Depends
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 from sqlmodel import Session, select, SQLModel, create_engine
 from uuid import UUID
@@ -46,12 +48,12 @@ def generate_jwt(payload: UserJWT):
     return jwt.encode(payload, JWT_SECRET, algorithm="HS256")
 
 
-def decode_jwt(token: str = HTTPBearer()) -> UserJWT:
+def decode_jwt(token: Annotated[HTTPAuthorizationCredentials, Depends(HTTPBearer())]) -> UserJWT:
     try:
         data = UserJWT(**jwt.decode(token, JWT_SECRET, algorithms=["HS256"]))
     except Exception as e:
         print(e)
-        raise HTTPException(status_code=401, detail="인증하는데 문제가 발생했어요..")
+        raise HTTPException(status_code=401, detail="인증하는데 문제가 발생했어요.")
     with Session(engine) as session:
         query = select(schemas.User).where(schemas.User.phone_number == data.phone_number)
         user = session.exec(query).first()
