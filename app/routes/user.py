@@ -1,7 +1,6 @@
-from fastapi import FastAPI, APIRouter, Depends, HTTPException, status
-import app.schemas as schemas
+from fastapi import APIRouter, Depends
+
 import app.dependencies as dependencies
-import app.functions as functions
 
 router = APIRouter(
     prefix="/user",

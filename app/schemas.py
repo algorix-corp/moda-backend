@@ -54,8 +54,8 @@ def get_engine():
     if engine is None:
         database_url = f"postgresql://{getenv('POSTGRES_USER')}:{getenv('POSTGRES_PASSWORD')}" \
                        f"@{getenv('POSTGRES_HOST')}:{getenv('POSTGRES_PORT')}/{getenv('POSTGRES_DB')}"
-    engine = create_engine(database_url, echo=True)
-    SQLModel.metadata.create_all(engine)
+        engine = create_engine(database_url, echo=True)
+        SQLModel.metadata.create_all(engine)
     return engine
 
 
