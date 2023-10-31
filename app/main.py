@@ -29,6 +29,7 @@ app.add_middleware(
 def on_startup():
     schemas.get_engine()
 
+    # noinspection PyGlobalUndefined
     global redis_client
     redis_client = redis.Redis(
         host=getenv("REDIS_HOST"),
