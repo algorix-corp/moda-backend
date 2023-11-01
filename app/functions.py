@@ -5,11 +5,11 @@ import boto3
 import requests
 from dotenv import load_dotenv
 
+load_dotenv()
+
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 API_KEY = os.getenv("TMAP_APP_KEY")
-
-load_dotenv()
 
 
 def make_auth_code():
@@ -88,3 +88,23 @@ def get_location(poi_id: int):
 
     response = requests.get(f"https://apis.openapi.sk.com/tmap/pois/{poi_id}", headers=headers, params=query)
     return response.json()
+
+
+def reverse_geocoding(lat: float, lon: float):
+    query = {
+        "version": "1",
+        "format": "json",
+        "callback": "result",
+        "coordType": "WGS84GEO",
+        "addressType": "A10",
+        "lon": lon,
+        "lat": lat
+    }
+
+    headers = {
+        # "accept": "application/json",
+        "appKey": API_KEY,
+    }
+
+    response = requests.get("https://apis.openapi.sk.com/tmap/geo/reversegeocoding", headers=headers, params=query)
+    return {"poi": poi_search(response.json()["addressInfo"]["fullAddress"])["searchPoiInfo"]["pois"]["poi"][0]["id"]}

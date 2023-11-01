@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.functions import poi_search, route_search, get_location
+from app.functions import poi_search, route_search, get_location, reverse_geocoding
 
 router = APIRouter(
     prefix="/map",
@@ -18,8 +18,27 @@ def get_poi(poi_id: str):
     return get_location(poi_id)
 
 
+@router.get("/reverse_geocoding")
+def reverse_geocoding_api(lat: float, lon: float):
+    return reverse_geocoding(lat, lon)
+
+
 @router.get("/route")
 def route(start_poi: str, end_poi: str):
+    start_loc = get_location(start_poi)
+    end_loc = get_location(end_poi)
+
+    start_lat = float(start_loc["poiDetailInfo"]["lat"])
+    start_lon = float(start_loc["poiDetailInfo"]["lon"])
+
+    end_lat = float(end_loc["poiDetailInfo"]["lat"])
+    end_lon = float(end_loc["poiDetailInfo"]["lon"])
+
+    return route_search(start_lat, start_lon, end_lat, end_lon)
+
+
+@router.get("/route_drt")
+def route_drt(start_poi: str, end_poi: str):
     start_loc = get_location(start_poi)
     end_loc = get_location(end_poi)
 
