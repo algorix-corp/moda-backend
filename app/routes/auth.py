@@ -35,7 +35,8 @@ def send_code(phone: Phone):
     phone_number = "".join(filter(str.isdigit, phone.number))
     auth_code = make_auth_code()
     redis.set(phone_number, auth_code, ex=300)
-    send_sms(phone_number, auth_code)
+    message = f"[모다]\n인증번호: {auth_code}\n\n@dev.ride.moda #{auth_code}"
+    send_sms(phone_number, message)
     return {"message": "success"}
 
 

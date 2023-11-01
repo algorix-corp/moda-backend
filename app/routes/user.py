@@ -74,8 +74,8 @@ class LocationBookmarkCreate(BaseModel):
 
 @router.post("/{user_id}/bookmarks")
 def create_bookmark(user_id: str, bookmark: LocationBookmarkCreate):
-    bookmark.user_id = user_id
-    new_bookmark = LocationBookmark.from_orm(bookmark)
+    # bookmark.user_id = user_id
+    new_bookmark = LocationBookmark(**bookmark.dict(), user_id=user_id)
     with Session(engine) as session:
         session.add(new_bookmark)
         session.commit()
