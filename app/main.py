@@ -5,7 +5,7 @@ from sqlmodel import SQLModel
 from app.database import engine
 from app.routes import auth, user, drt, map
 
-app = FastAPI(title="MODA API")
+app = FastAPI(title="MODA API", docs_url="/")
 
 app.add_middleware(
     CORSMiddleware,
