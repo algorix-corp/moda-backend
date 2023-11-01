@@ -24,7 +24,7 @@ def is_user_exist(phone: Phone):
         statement = select(User).where(User.phone_number == phone_number)
         result = session.exec(statement)
         if result.first():
-            return {"message": "exist"}
+            return {"message": "exist", "user_id": result.first().id}
         else:
             return {"message": "not exist"}
 

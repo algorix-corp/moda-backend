@@ -83,6 +83,26 @@ def create_bookmark(user_id: str, bookmark: LocationBookmarkCreate):
         return {"message": "success", "bookmark_id": new_bookmark.id}
 
 
+@router.get("/{user_id}/bookmarks")
+def get_bookmark(user_id: str):
+    with Session(engine) as session:
+        statement = select(LocationBookmark).where(LocationBookmark.user_id == user_id)
+        result = session.exec(statement)
+        bookmarks = result.all()
+        return {"message": "success", "bookmarks": bookmarks}
+
+
+@router.delete("/{user_id}/bookmarks/{bookmark_id}")
+def delete_bookmark(user_id: str, bookmark_id: str):
+    with Session(engine) as session:
+        statement = select(LocationBookmark).where(LocationBookmark.id == bookmark_id)
+        result = session.exec(statement)
+        old_bookmark = result.first()
+        session.delete(old_bookmark)
+        session.commit()
+        return {"message": "success"}
+
+
 class DRTReservationCreate(BaseModel):
     bus_id: str
     date: date
@@ -92,26 +112,6 @@ class DRTReservationCreate(BaseModel):
     estimated_time: timedelta
     saved_time: str
     estimate_fee: int
-
-
-@router.post("/{user_id}/reservations")
-def create_reservation(user_id: str, reservation: DRTReservationCreate):
-    reservation.user_id = user_id
-    new_reservation = DRTReservation.from_orm(reservation)
-    with Session(engine) as session:
-        session.add(new_reservation)
-        session.commit()
-        session.refresh(new_reservation)
-        return {"message": "success", "reservation_id": new_reservation.id}
-
-
-@router.get("/{user_id}/bookmarks")
-def get_bookmark(user_id: str):
-    with Session(engine) as session:
-        statement = select(LocationBookmark).where(LocationBookmark.user_id == user_id)
-        result = session.exec(statement)
-        bookmarks = result.all()
-        return {"message": "success", "bookmarks": bookmarks}
 
 
 @router.get("/{user_id}/reservations")

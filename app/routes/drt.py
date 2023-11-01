@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from sqlmodel import Session, select
 
 from app.database import engine
-from app.schemas import DRTReservation
+from app.schemas import DRTReservation, DRTBus
 
 router = APIRouter(
     prefix="/drt",
@@ -42,6 +42,24 @@ def get_drt_reservation(drt_reservation_id: str):
         result = session.exec(statement)
         drt_reservation = result.first()
         return {"message": "success", "drt_reservation": drt_reservation}
+
+
+@router.get("/dist_drt/")
+def get_regions():
+    with Session(engine) as session:
+        statement = select(DRTBus).distinct()
+        result = session.exec(statement)
+        regions = result.all()
+        return {"message": "success", "regions": regions}
+
+
+@router.get("/dist_drt/{region}")
+def get_dist_drt(region: str):
+    with Session(engine) as session:
+        statement = select(DRTReservation).where(DRTReservation.drt_region == region)
+        result = session.exec(statement)
+        drt_reservations = result.all()
+        return {"message": "success", "drt_reservations": drt_reservations}
 
 
 @router.put("/{drt_reservation_id}")
