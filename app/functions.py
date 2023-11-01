@@ -1,28 +1,15 @@
 import os
 import random
-from datetime import datetime, timedelta
 
 import boto3
-import jwt
 import requests
 from dotenv import load_dotenv
 
-import app.schemas as schemas
-
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-JWT_SECRET = os.getenv("JWT_SECRET")
-API_KEY = os.getenv("API_KEY")
+API_KEY = os.getenv("TMAP_APP_KEY")
 
 load_dotenv()
-
-
-def generate_jwt_token(user: schemas.User):
-    to_encode = user.dict()
-    expire = datetime.utcnow() + timedelta(minutes=30)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, JWT_SECRET, algorithm="HS256")
-    return encoded_jwt
 
 
 def make_auth_code():
