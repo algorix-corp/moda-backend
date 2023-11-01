@@ -23,8 +23,9 @@ def is_user_exist(phone: Phone):
     with Session(engine) as session:
         statement = select(User).where(User.phone_number == phone_number)
         result = session.exec(statement)
-        if result.first():
-            return {"message": "exist", "user_id": result.first().id}
+        data = result.first()
+        if data:
+            return {"message": "exist", "user_id": data.id}
         else:
             return {"message": "not exist"}
 

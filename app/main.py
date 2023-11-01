@@ -24,3 +24,4 @@ app.include_router(map.router)
 @app.on_event("startup")
 def on_startup():
     SQLModel.metadata.create_all(engine)
+
