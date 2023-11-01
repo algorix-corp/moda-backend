@@ -13,7 +13,8 @@ load_dotenv()
 
 
 def make_auth_code():
-    return "".join([str(random.randint(0, 9)) for _ in range(6)])
+    # return "".join([str(random.randint(0, 9)) for _ in range(6)])
+    return str(random.randint(1, 9)) + "".join([str(random.randint(0, 9)) for _ in range(5)])
 
 
 def send_sms(phone, text):
