@@ -80,5 +80,5 @@ def route_drt(start_poi: str, end_poi: str):
         }
 
 
-resp = route_drt("1866614", "535438")
-print(resp)
+# resp = route_drt("1866614", "535438")
+# print(resp)
