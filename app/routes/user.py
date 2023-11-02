@@ -49,6 +49,7 @@ def update_user(user_id: str, user: UserCreate):
         old_user.username = user.username
         old_user.card_number = user.card_number
         old_user.notification = user.notification
+        old_user.phone_number = user.phone_number
         session.add(old_user)
         session.commit()
         session.refresh(old_user)
