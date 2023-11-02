@@ -70,8 +70,8 @@ def route_drt(start_poi: str, end_poi: str):
                 "route": route["metaData"]["plan"]["itineraries"][0]["legs"],
                 "fareWon": fareWon + 1500,
                 "timeMinute": timeMinute / 60,
-                "savedWon": "3500",
-                "savedMinute": "20"
+                "savedWon": 2800*drt_count,
+                "savedMinute": 10*drt_count
             }
         else:
             return {
