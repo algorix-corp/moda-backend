@@ -51,17 +51,25 @@ def route_drt(start_poi: str, end_poi: str):
     route = route_search(start_lat, start_lon, end_lat, end_lon)
     print(route)
 
-    fareWon = route["metaData"]["plan"]["itineraries"][0]["fare"]["regular"]["totalFare"]
-    timeMinute = route["metaData"]["plan"]["itineraries"][0]["totalTime"]
+    try:
+        fareWon = route["metaData"]["plan"]["itineraries"][0]["fare"]["regular"]["totalFare"]
+        timeMinute = route["metaData"]["plan"]["itineraries"][0]["totalTime"]
 
-    return {
-        "route": route["metaData"]["plan"]["itineraries"][0]["legs"],
-        "fareWon": fareWon + 1500,
-        "timeMinute": timeMinute / 60,
-        "savedWon": "3500",
-        "savedMinute": "20"
-    }
+        return {
+            "route": route["metaData"]["plan"]["itineraries"][0]["legs"],
+            "fareWon": fareWon + 1500,
+            "timeMinute": timeMinute / 60,
+            "savedWon": "3500",
+            "savedMinute": "20"
+        }
+    except KeyError:
+        return {
+            "route": route["metaData"]["plan"]["itineraries"][0]["legs"],
+            "fareWon": -1,
+            "timeMinute": -1,
+            "savedWon": -1,
+            "savedMinute": -1
+        }
 
-
-resp = route_drt("1866614", "535438")
-print(resp)
+# resp = route_drt("1866614", "535438")
+# print(resp)
