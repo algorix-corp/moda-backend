@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import SQLModel
 
@@ -25,3 +25,7 @@ app.include_router(map.router)
 def on_startup():
     SQLModel.metadata.create_all(engine)
 
+
+@app.exception_handler(Exception)
+def unicorn_exception_handler(request, exc):
+    return HTTPException(status_code=500, detail=str(exc))
