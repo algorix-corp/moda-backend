@@ -49,7 +49,15 @@ def route_drt(start_poi: str, end_poi: str):
     end_lon = float(end_loc["poiDetailInfo"]["lon"])
 
     route = route_search(start_lat, start_lon, end_lat, end_lon)
-    print(route)
+    # print(route)
+
+    for i in range(len(route["metaData"]["plan"]["itineraries"][0]["legs"])):
+        if route["metaData"]["plan"]["itineraries"][0]["legs"][i]["mode"] == "WALK" and \
+                route["metaData"]["plan"]["itineraries"][0]["legs"][i]["sectionTime"] > 600:
+            route["metaData"]["plan"]["itineraries"][0]["legs"][i]["mode"] = "DRT"
+            route["metaData"]["plan"]["itineraries"][0]["legs"][i]["mention"] = (f'DRT를 사용해 '
+            f'{route["metaData"]["plan"]["itineraries"][0]["legs"][i]["start"]["name"]}에서 '
+            f'{route["metaData"]["plan"]["itineraries"][0]["legs"][i]["end"]["name"]}까지 이동합니다.')
 
     try:
         fareWon = route["metaData"]["plan"]["itineraries"][0]["fare"]["regular"]["totalFare"]
@@ -71,5 +79,6 @@ def route_drt(start_poi: str, end_poi: str):
             "savedMinute": -1
         }
 
-# resp = route_drt("1866614", "535438")
-# print(resp)
+
+resp = route_drt("1866614", "535438")
+print(resp)
